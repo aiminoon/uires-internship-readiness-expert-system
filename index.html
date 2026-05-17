@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InternReady — Internship Readiness Checker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --card: #1a1e29;
+      --border: #252a38;
+      --accent: #6ee7b7;
+      --accent2: #38bdf8;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --text: #e8ecf4;
+      --muted: #7a8299;
+      --radius: 14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(110,231,183,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(110,231,183,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 52px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(110,231,183,0.08);
+      border: 1px solid rgba(110,231,183,0.2);
+      color: var(--accent);
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+    .badge::before { content: '◈'; font-size: 10px; }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #e8ecf4 0%, #6ee7b7 60%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 300;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      margin-bottom: 36px;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 100px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0%;
+    }
+
+    /* Questions */
+    .question-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 28px 24px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, transform 0.2s;
+      animation: fadeSlideIn 0.35s ease both;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .question-card.answered { border-color: rgba(110,231,183,0.25); }
+
+    .q-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .q-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: rgba(110,231,183,0.1);
+      border: 1px solid rgba(110,231,183,0.25);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .question-card.answered .q-num {
+      background: rgba(110,231,183,0.18);
+      border-color: var(--accent);
+    }
+    .q-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      padding-top: 4px;
+    }
+
+    /* Radio options */
+    .options { display: flex; flex-direction: column; gap: 8px; }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      background: var(--surface);
+    }
+    .option-label:hover {
+      border-color: rgba(110,231,183,0.4);
+      background: rgba(110,231,183,0.05);
+    }
+
+    input[type="radio"] { display: none; }
+
+    input[type="radio"]:checked + .option-label {
+      border-color: var(--accent);
+      background: rgba(110,231,183,0.1);
+      color: var(--accent);
+    }
+
+    .radio-dot {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: all 0.18s;
+      position: relative;
+    }
+    input[type="radio"]:checked + .option-label .radio-dot {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+    input[type="radio"]:checked + .option-label .radio-dot::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      background: var(--bg);
+      border-radius: 50%;
+    }
+
+    .option-text { font-size: 14px; font-weight: 400; }
+
+    /* Submit button */
+    .submit-wrap { margin-top: 32px; text-align: center; }
+
+    button#submit-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0d0f14;
+      border: none;
+      padding: 15px 48px;
+      border-radius: 100px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 32px rgba(110,231,183,0.2);
+    }
+    button#submit-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    button#submit-btn:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 48px rgba(110,231,183,0.35);
+    }
+    button#submit-btn:not(:disabled):active { transform: translateY(0); }
+
+    .submit-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Results */
+    #result-section { margin-top: 48px; animation: fadeSlideIn 0.5s ease both; }
+
+    .result-banner {
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .result-banner::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      opacity: 0.12;
+    }
+    .result-banner.ready {
+      background: rgba(110,231,183,0.08);
+      border: 1px solid rgba(110,231,183,0.3);
+    }
+    .result-banner.ready::before { background: var(--accent); }
+
+    .result-banner.partial {
+      background: rgba(251,191,36,0.07);
+      border: 1px solid rgba(251,191,36,0.3);
+    }
+    .result-banner.partial::before { background: var(--warn); }
+
+    .result-banner.not-ready {
+      background: rgba(248,113,113,0.07);
+      border: 1px solid rgba(248,113,113,0.3);
+    }
+    .result-banner.not-ready::before { background: var(--danger); }
+
+    .result-icon { font-size: 36px; margin-bottom: 12px; }
+    .result-level {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .result-banner.ready .result-level { color: var(--accent); }
+    .result-banner.partial .result-level { color: var(--warn); }
+    .result-banner.not-ready .result-level { color: var(--danger); }
+
+    .result-desc { color: var(--muted); font-size: 14px; max-width: 500px; }
+
+    /* Recommendations */
+    .recs-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .rec-item {
+      display: flex;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      animation: fadeSlideIn 0.4s ease both;
+    }
+    .rec-item:nth-child(2) { animation-delay: 0.05s; }
+    .rec-item:nth-child(3) { animation-delay: 0.10s; }
+    .rec-item:nth-child(4) { animation-delay: 0.15s; }
+    .rec-item:nth-child(5) { animation-delay: 0.20s; }
+    .rec-item:nth-child(6) { animation-delay: 0.25s; }
+
+    .rec-bullet {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+    .not-ready .rec-bullet { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .partial .rec-bullet { background: rgba(251,191,36,0.12); color: var(--warn); }
+
+    .rec-text { font-size: 14px; color: var(--text); line-height: 1.6; }
+
+    /* Reset */
+    .reset-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 22px;
+      border-radius: 100px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reset-btn:hover { border-color: var(--text); color: var(--text); }
+
+    /* Loading */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(13,15,20,0.3);
+      border-top-color: #0d0f14;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-msg {
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: var(--danger);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="badge">Expert System · CLIPS Powered</div>
+    <h1>InternReady</h1>
+    <p class="subtitle">Answer six quick questions to find out if you're ready to apply for your internship — and get a personalised action plan.</p>
+  </header>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span>Your Progress</span>
+      <span id="progress-text">0 / 6 answered</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- Form -->
+  <form id="readiness-form" novalidate>
+
+    <!-- Q1: CGPA -->
+    <div class="question-card" id="card-1">
+      <div class="q-header">
+        <div class="q-num">1</div>
+        <div class="q-text">Your CGPA is …</div>
+      </div>
+      <div class="options">
+        <input type="radio" name="cgpa" id="cgpa-1" value="low"/>
+        <label for="cgpa-1" class="option-label"><span class="radio-dot"></span><span class="option-text">Below 2.00</span></label>
+
+        <input type="radio" name="cgpa" id="cgpa-2" value="medium"/>
+        <label for="cgpa-2" class="option-label"><span class="radio-dot"></span><span class="option-text">2.00 – 3.00</span></label>
+
+        <input type="radio" name="cgpa" id="cgpa-3" value="high"/>
+        <label for="cgpa-3" class="option-label"><span class="radio-dot"></span><span class="option-text">Above 3.00</span></label>
+      </div>
+    </div>
+
+    <!-- Q2: Resume -->
+    <div class="question-card" id="card-2">
+      <div class="q-header">
+        <div class="q-num">2</div>
+        <div class="q-text">Your resume is …</div>
+      </div>
+      <div class="options">
+        <input type="radio" name="resume" id="resume-1" value="missing"/>
+        <label for="resume-1" class="option-label"><span class="radio-dot"></span><span class="option-text">Missing — I don't have one yet</span></label>
+
+        <input type="radio" name="resume" id="resume-2" value="incomplete"/>
+        <label for="resume-2" class="option-label"><span class="radio-dot"></span><span class="option-text">Incomplete — work in progress</span></label>
+
+        <input type="radio" name="resume" id="resume-3" value="complete"/>
+        <label for="resume-3" class="option-label"><span class="radio-dot"></span><span class="option-text">Complete and ready</span></label>
+      </div>
+    </div>
+
+    <!-- Q3: Skills -->
+    <div class="question-card" id="card-3">
+      <div class="q-header">
+        <div class="q-num">3</div>
+        <div class="q-text">Your technical skills proficiency is …</div>
+      </div>
+      <div class="options">
+        <input type="radio" name="skills" id="skills-1" value="none"/>
+        <label for="skills-1" class="option-label"><span class="radio-dot"></span><span class="option-text">None — I haven't learned any yet</span></label>
+
+        <input type="radio" name="skills" id="skills-2" value="basic"/>
+        <label for="skills-2" class="option-label"><span class="radio-dot"></span><span class="option-text">Basic — familiar with the fundamentals</span></label>
+
+        <input type="radio" name="skills" id="skills-3" value="proficient"/>
+        <label for="skills-3" class="option-label"><span class="radio-dot"></span><span class="option-text">Proficient — confident and practised</span></label>
+      </div>
+    </div>
+
+    <!-- Q4: Portfolio -->
+    <div class="question-card" id="card-4">
+      <div class="q-header">
+        <div class="q-num">4</div>
+        <div class="q-text">The number of project portfolio items you have …</div>
+      </div>
+      <div class="options">
+        <input type="radio" name="portfolio" id="portfolio-1" value="zero"/>
+        <label for="portfolio-1" class="option-label"><span class="radio-dot"></span><span class="option-text">0 — none at all</span></label>
+
+        <input type="radio" name="portfolio" id="portfolio-2" value="one"/>
+        <label for="portfolio-2" class="option-label"><span class="radio-dot"></span><span class="option-text">1 project</span></label>
+
+        <input type="radio" name="portfolio" id="portfolio-3" value="two-plus"/>
+        <label for="portfolio-3" class="option-label"><span class="radio-dot"></span><span class="option-text">2 or more projects</span></label>
+      </div>
+    </div>
+
+    <!-- Q5: Documents -->
+    <div class="question-card" id="card-5">
+      <div class="q-header">
+        <div class="q-num">5</div>
+        <div class="q-text">Your required application documents are …</div>
+      </div>
+      <div class="options">
+        <input type="radio" name="documents" id="docs-1" value="missing"/>
+        <label for="docs-1" class="option-label"><span class="radio-dot"></span><span class="option-text">Missing — haven't gathered them</span></label>
+
+        <input type="radio" name="documents" id="docs-2" value="incomplete"/>
+        <label for="docs-2" class="option-label"><span class="radio-dot"></span><span class="option-text">Incomplete — some are ready</span></label>
+
+        <input type="radio" name="documents" id="docs-3" value="complete"/>
+        <label for="docs-3" class="option-label"><span class="radio-dot"></span><span class="option-text">Complete — all in order</span></label>
+      </div>
+    </div>
+
+    <!-- Q6: Interview -->
+    <div class="question-card" id="card-6">
+      <div class="q-header">
+        <div class="q-num">6</div>
+        <div class="q-text">You have prepared for the interview …</div>
+      </div>
+      <div class="options">
+        <input type="radio" name="interview" id="interview-1" value="no"/>
+        <label for="interview-1" class="option-label"><span class="radio-dot"></span><span class="option-text">No — haven't started</span></label>
+
+        <input type="radio" name="interview" id="interview-2" value="partial"/>
+        <label for="interview-2" class="option-label"><span class="radio-dot"></span><span class="option-text">Partially — done some prep</span></label>
+
+        <input type="radio" name="interview" id="interview-3" value="yes"/>
+        <label for="interview-3" class="option-label"><span class="radio-dot"></span><span class="option-text">Yes — well prepared</span></label>
+      </div>
+    </div>
+
+    <div class="submit-wrap">
+      <button type="submit" id="submit-btn" disabled>Evaluate My Readiness</button>
+      <p class="submit-hint" id="submit-hint">Answer all 6 questions to continue</p>
+    </div>
+
+    <div class="error-msg" id="error-box" style="display:none;"></div>
+  </form>
+
+  <!-- Results -->
+  <div id="result-section" style="display:none;"></div>
+
+</div>
+
+<script>
+  const API = 'http://localhost:5050/evaluate';
+
+  const form = document.getElementById('readiness-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const submitHint = document.getElementById('submit-hint');
+  const progressFill = document.getElementById('progress-fill');
+  const progressText = document.getElementById('progress-text');
+  const errorBox = document.getElementById('error-box');
+  const resultSection = document.getElementById('result-section');
+
+  const fields = ['cgpa','resume','skills','portfolio','documents','interview'];
+
+  function getAnswered() {
+    return fields.filter(f => form.querySelector(`input[name="${f}"]:checked`));
+  }
+
+  function updateProgress() {
+    const answered = getAnswered().length;
+    const pct = (answered / 6) * 100;
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `${answered} / 6 answered`;
+    submitBtn.disabled = answered < 6;
+    submitHint.textContent = answered < 6
+      ? `${6 - answered} question${6 - answered > 1 ? 's' : ''} remaining`
+      : 'All questions answered — ready to evaluate!';
+
+    // Mark answered cards
+    fields.forEach((f, i) => {
+      const card = document.getElementById(`card-${i+1}`);
+      const checked = form.querySelector(`input[name="${f}"]:checked`);
+      card.classList.toggle('answered', !!checked);
+    });
+  }
+
+  form.addEventListener('change', updateProgress);
+
+  const CONCLUSIONS = {
+    ready: {
+      icon: '🎯',
+      label: 'Ready to Apply!',
+      css: 'ready',
+      desc: 'All essential readiness criteria have been fulfilled. You have a strong foundation — go ahead and start applying with confidence!'
+    },
+    partial: {
+      icon: '⚠️',
+      label: 'Partially Ready',
+      css: 'partial',
+      desc: 'One or two areas need improvement before you are fully application-ready. Review the recommendations below and address them before submitting.'
+    },
+    'not-ready': {
+      icon: '🚧',
+      label: 'Not Ready Yet',
+      css: 'not-ready',
+      desc: 'Significant gaps have been detected. Follow the prioritised action plan below to get yourself application-ready as soon as possible.'
+    }
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.style.display = 'none';
+    resultSection.style.display = 'none';
+
+    const payload = {};
+    fields.forEach(f => {
+      const el = form.querySelector(`input[name="${f}"]:checked`);
+      payload[f] = el ? el.value : null;
+    });
+
+    submitBtn.innerHTML = '<span class="spinner"></span>Evaluating…';
+    submitBtn.disabled = true;
+
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+      renderResult(data);
+    } catch (err) {
+      errorBox.textContent = `Could not connect to the expert system backend. Make sure the Flask server is running on port 5050. (${err.message})`;
+      errorBox.style.display = 'block';
+    } finally {
+      submitBtn.innerHTML = 'Evaluate My Readiness';
+      submitBtn.disabled = false;
+    }
+  });
+
+  function renderResult(data) {
+    const c = CONCLUSIONS[data.conclusion] || CONCLUSIONS['not-ready'];
+    let html = `
+      <div class="result-banner ${c.css}">
+        <div class="result-icon">${c.icon}</div>
+        <div class="result-level">${c.label}</div>
+        <div class="result-desc">${c.desc}</div>
+      </div>`;
+
+    if (data.recommendations && data.recommendations.length > 0) {
+      html += `<div class="recs-title">📋 Action Plan &amp; Recommendations</div>`;
+      html += `<div class="${c.css}">`;
+      data.recommendations.forEach((rec, i) => {
+        html += `
+          <div class="rec-item">
+            <div class="rec-bullet">${i + 1}</div>
+            <div class="rec-text">${rec}</div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `
+      <hr class="divider"/>
+      <button class="reset-btn" onclick="resetForm()">↺ &nbsp;Start Over</button>`;
+
+    resultSection.innerHTML = html;
+    resultSection.style.display = 'block';
+    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetForm() {
+    form.reset();
+    updateProgress();
+    resultSection.style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
