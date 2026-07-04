@@ -97,7 +97,7 @@ Developed for **WID2001 Knowledge Representation and Reasoning**, Faculty of Com
 
 ## Team
 
-- Dennis Aimin Oon Bin jeffrey Oon — Knowledge Engineer
+- Dennis Aimin Oon Bin Jeffrey Oon — Knowledge Engineer
 - Muhammad Imran Bin Ilias — Programmer
 - Muhammad Aiman Bin Sharuddin — Domain Expert
 - Ahmad Firdaus Bin Ahmad Hafiz — Project Manager
